@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>머니로그 | 용돈 관리</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--text:#20242c;--muted:#858c99;--line:#e9ebef;--accent:#ff795e;--accent2:#ffad7d;--green:#238b69;--red:#d95c5c;--shadow:0 10px 30px #22222209}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Malgun Gothic",sans-serif}
+header{padding:25px 22px;background:#fff;border-bottom:1px solid var(--line)}
+.top{max-width:1080px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{font-size:21px;font-weight:900;letter-spacing:-1px}.logo span{color:var(--accent)}
+.month{font-size:13px;color:var(--muted);background:#f5f6f8;padding:9px 13px;border-radius:20px}
+main{max-width:1080px;margin:30px auto;padding:0 20px 50px}
+.greeting{margin:0 0 22px}.greeting small{color:var(--muted)}.greeting h1{font-size:27px;margin:7px 0 0;letter-spacing:-1px}
+.summary{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:14px}
+.tile{padding:22px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--line)}
+.tile.primary{background:#292e38;color:white;border:0}.tile small{font-size:13px;color:var(--muted)}.tile.primary small{color:#c2c6ce}
+.money{font-size:25px;font-weight:800;margin-top:12px;letter-spacing:-.5px}.tile.primary .money{color:#ffb19b}
+.layout{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+h2{font-size:17px;margin:0 0 18px}
+.field{margin-bottom:13px}label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fafbfc;font-size:14px;color:var(--text);outline:none}
+input:focus,select:focus{border-color:var(--accent);background:#fff}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:10px;padding:12px 16px;background:var(--accent);color:#fff;font-weight:750;cursor:pointer}
+button:hover{filter:brightness(.97)}button.light{background:#fff0ec;color:#d95e48}
+button.remove{padding:7px 10px;background:#fff0ef;color:var(--red);font-size:12px}
+.full{width:100%}.hint{font-size:12px;color:var(--muted);margin:10px 0 0;min-height:16px}
+.budget-line{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:17px 0 8px}
+.track{height:9px;background:#f0f1f4;border-radius:20px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:20px;transition:width .2s}
+.category-list{display:grid;gap:13px}.cat{display:grid;grid-template-columns:75px 1fr auto;align-items:center;gap:10px;font-size:13px}.catbar{height:7px;background:#f0f1f4;border-radius:10px;overflow:hidden}.catbar i{display:block;height:100%;background:var(--accent);border-radius:10px}.cat strong{font-size:12px}
+.history{margin-top:18px}.history-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.history-head h2{margin:0}.history-head input{max-width:220px}
+.list{display:grid;gap:9px}.item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px}
+.symbol{width:39px;height:39px;border-radius:12px;background:#fff0ec;display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.item-info{min-width:0;flex:1}.item-info b{font-size:14px}.item-info small{display:block;color:var(--muted);margin-top:4px;font-size:12px}
+.item-right{text-align:right;white-space:nowrap}.item-right b{font-size:14px;display:block;margin-bottom:5px}
+.empty{text-align:center;color:var(--muted);padding:28px 10px;font-size:13px}
+@media(max-width:760px){.summary{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.top{align-items:flex-start}.money{font-size:23px}}
+@media(max-width:430px){main{padding-left:13px;padding-right:13px}.panel{padding:17px}.row2{grid-template-columns:1fr}.history-head{align-items:flex-start;flex-direction:column}.history-head input{max-width:none}}
+</style>
+</head>
+<body>
+<header><div class="top"><div class="logo">money<span>log.</span></div><div class="month" id="monthLabel"></div></div></header>
+<main>
+ <div class="greeting"><small>MY ALLOWANCE DASHBOARD</small><h1>이번 달 소비 기록</h1></div>
+ <section class="summary">
+  <div class="tile primary"><small>남은 용돈</small><div class="money" id="left">0원</div></div>
+  <div class="tile"><small>이번 달 예산</small><div class="money" id="budget">0원</div></div>
+  <div class="tile"><small>누적 지출</small><div class="money" id="spent">0원</div></div>
+ </section>
+ <section class="layout">
+  <div class="panel">
+   <h2>이번 달 예산 설정</h2>
+   <div class="field"><label for="budgetInput">한 달 용돈 (원)</label><input id="budgetInput" type="number" min="0" placeholder="예: 300000"></div>
+   <button class="light full" id="budgetSave">예산 저장하기</button>
+   <div class="budget-line"><span>예산 사용률</span><b id="rate">0%</b></div>
+   <div class="track"><div class="fill" id="fill"></div></div>
+   <p class="hint" id="budgetMsg"></p>
+  </div>
+  <div class="panel">
+   <h2>지출 빠르게 기록하기</h2>
+   <form id="form">
+    <div class="row2">
+     <div class="field"><label for="category">카테고리</label><select id="category"><option>식비</option><option>교통</option><option>카페</option><option>쇼핑</option><option>문화·여가</option><option>기타</option></select></div>
+     <div class="field"><label for="amount">금액 (원)</label><input id="amount" type="number" min="1" step="1" placeholder="금액 입력" required></div>
+    </div>
+    <div class="field"><label for="memo">사용 내용</label><input id="memo" maxlength="60" placeholder="예: 친구와 점심"></div>
+    <button class="full" type="submit">+ 지출 추가</button>
+    <p class="hint" id="formMsg"></p>
+   </form>
+  </div>
+ </section>
+ <section class="panel history">
+  <div class="history-head"><h2>카테고리별 지출</h2></div>
+  <div class="category-list" id="categories"></div>
+ </section>
+ <section class="panel history">
+  <div class="history-head"><h2>최근 지출 내역</h2><input id="search" type="search" placeholder="내역 검색"></div>
+  <div class="list" id="historyList"></div>
+  <p class="hint">기록은 이 브라우저에 자동 저장됩니다.</p>
+ </section>
+</main>
+<script>
+const KEY="moneylog_allowance_v2";
+const $=id=>document.getElementById(id);
+const money=n=>Number(n).toLocaleString("ko-KR")+"원";
+const icons={"식비":"🍚","교통":"🚌","카페":"☕","쇼핑":"🛍️","문화·여가":"🎬","기타":"📌"};
+let data={budget:0,items:[]};
+try{const old=JSON.parse(localStorage.getItem(KEY)||"null");if(old&&typeof old==="object"){data.budget=Number(old.budget)||0;data.items=Array.isArray(old.items)?old.items:[]}}catch(e){}
+$("monthLabel").textContent=new Date().getFullYear()+"년 "+(new Date().getMonth()+1)+"월";
+$("budgetInput").value=data.budget||"";
+function persist(){localStorage.setItem(KEY,JSON.stringify(data))}
+function render(){
+ const total=data.items.reduce((s,x)=>s+Number(x.amount),0),left=data.budget-total;
+ const rate=data.budget?Math.round(total/data.budget*100):0;
+ $("left").textContent=money(left);$("left").style.color=left<0?"#ff8e83":"#ffb19b";
+ $("budget").textContent=money(data.budget);$("spent").textContent=money(total);
+ $("rate").textContent=rate+"%";$("fill").style.width=Math.min(rate,100)+"%";
+ $("fill").style.background=rate>100?"#d95c5c":"linear-gradient(90deg,#ff795e,#ffad7d)";
+ const totals={};data.items.forEach(x=>totals[x.category]=(totals[x.category]||0)+Number(x.amount));
+ const cats=Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+ $("categories").replaceChildren();
+ if(!cats.length){$("categories").innerHTML='<div class="empty">아직 지출 기록이 없습니다.</div>'}
+ else cats.forEach(([name,value])=>{
+  const line=document.createElement("div");line.className="cat";
+  const label=document.createElement("span");label.textContent=(icons[name]||"📌")+" "+name;
+  const bar=document.createElement("div");bar.className="catbar";
+  const fill=document.createElement("i");fill.style.width=(total?value/total*100:0)+"%";bar.append(fill);
+  const amount=document.createElement("strong");amount.textContent=money(value);
+  line.append(label,bar,amount);$("categories").append(line);
+ });
+ const keyword=$("search").value.trim().toLowerCase();
+ const filtered=[...data.items].reverse().filter(x=>(x.category+" "+x.memo).toLowerCase().includes(keyword));
+ $("historyList").replaceChildren();
+ if(!filtered.length){const e=document.createElement("div");e.className="empty";e.textContent=data.items.length?"검색 결과가 없습니다.":"지출 내역을 추가해 보세요."; $("historyList").append(e)}
+ filtered.forEach(x=>{
+  const item=document.createElement("div");item.className="item";
+  const symbol=document.createElement("div");symbol.className="symbol";symbol.textContent=icons[x.category]||"📌";
+  const info=document.createElement("div");info.className="item-info";
+  const name=document.createElement("b");name.textContent=x.category;
+  const memo=document.createElement("small");memo.textContent=x.memo||"메모 없음";
+  info.append(name,memo);
+  const right=document.createElement("div");right.className="item-right";
+  const amount=document.createElement("b");amount.textContent="-"+money(x.amount);
+  const del=document.createElement("button");del.className="remove";del.textContent="삭제";del.addEventListener("click",()=>{data.items=data.items.filter(y=>y.id!==x.id);persist();render()});
+  right.append(amount,del);item.append(symbol,info,right);$("historyList").append(item);
+ });
+}
+$("budgetSave").addEventListener("click",()=>{
+ const raw=$("budgetInput").value,n=Number(raw);
+ if(raw===""||!Number.isSafeInteger(n)||n<0){$("budgetMsg").textContent="0원 이상의 금액을 입력해 주세요.";return}
+ data.budget=n;persist();render();$("budgetMsg").textContent="예산을 저장했습니다.";
+});
+$("form").addEventListener("submit",e=>{
+ e.preventDefault();const raw=$("amount").value,n=Number(raw);
+ if(raw===""||!Number.isSafeInteger(n)||n<=0){$("formMsg").textContent="1원 이상의 금액을 입력해 주세요.";return}
+ data.items.push({id:Date.now().toString()+Math.random(),category:$("category").value,amount:n,memo:$("memo").value.trim()});
+ persist();render();$("form").reset();$("formMsg").textContent="지출을 기록했습니다.";
+});
+$("search").addEventListener("input",render);
+render();
+</script>
+</body></html>
